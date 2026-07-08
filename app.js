@@ -285,62 +285,35 @@ function buildNameTag(text) {
 function exportSTL() {
   if (!tagGroup) return;
 
-  // Create an export group without the decorative ring
+  const text = nameInput.value.trim();
+  if (!text) return;
+
+  // Build a temporary group with only the tag body and text (skip decorative ring)
+  // using the exact same geometry as the preview
   const exportGroup = new THREE.Group();
 
-  // Rebuild the tag for export (without bevel for cleaner print)
-  const text = nameInput.value.trim();
-  if (!text || !currentFont) return;
+  tagGroup.children.forEach((child) => {
+    if (!child.isMesh) return;
 
-  const tempTextGeo = new TextGeometry(text, {
-    font: currentFont,
-    size: TEXT_SIZE,
-    depth: 0.1,
-    curveSegments: 4,
+    // Skip the decorative ring (TorusGeometry)
+    if (child.geometry.type === 'TorusGeometry') return;
+
+    // Clone mesh so we can bake its position into the geometry for export
+    const clonedGeo = child.geometry.clone();
+    clonedGeo.applyMatrix4(child.matrixWorld);
+
+    const exportMesh = new THREE.Mesh(clonedGeo, new THREE.MeshBasicMaterial());
+    exportGroup.add(exportMesh);
   });
-  tempTextGeo.computeBoundingBox();
-  const textWidth = tempTextGeo.boundingBox.max.x - tempTextGeo.boundingBox.min.x;
-  tempTextGeo.dispose();
-
-  const tagWidth = textWidth + TAG_PADDING_X * 2 + TAG_PADDING_HOLE;
-  const holeX = -tagWidth / 2 + TAG_PADDING_HOLE / 2 + HOLE_RADIUS + 1;
-  const holeY = 0;
-
-  // Tag body with hole
-  const tagShape = createTagShapeWithHole(
-    tagWidth, TAG_HEIGHT, TAG_CORNER_RADIUS,
-    holeX, holeY, HOLE_RADIUS
-  );
-
-  const tagGeo = new THREE.ExtrudeGeometry(tagShape, {
-    depth: TAG_DEPTH,
-    bevelEnabled: false,
-  });
-
-  const tagMesh = new THREE.Mesh(tagGeo, new THREE.MeshBasicMaterial());
-  exportGroup.add(tagMesh);
-
-  // Text
-  const textGeo = new TextGeometry(text, {
-    font: currentFont,
-    size: TEXT_SIZE,
-    depth: TEXT_DEPTH,
-    curveSegments: 12,
-    bevelEnabled: false,
-  });
-
-  textGeo.computeBoundingBox();
-  const bb = textGeo.boundingBox;
-  const tw = bb.max.x - bb.min.x;
-  const th = bb.max.y - bb.min.y;
-
-  const textMesh = new THREE.Mesh(textGeo, new THREE.MeshBasicMaterial());
-  textMesh.position.set(-tw / 2 + TAG_PADDING_HOLE / 4, -th / 2, TAG_DEPTH);
-  exportGroup.add(textMesh);
 
   // Export
   const exporter = new STLExporter();
   const result = exporter.parse(exportGroup, { binary: true });
+
+  // Cleanup cloned geometries
+  exportGroup.children.forEach((child) => {
+    if (child.geometry) child.geometry.dispose();
+  });
 
   // Download
   const blob = new Blob([result], { type: 'application/octet-stream' });
@@ -350,10 +323,6 @@ function exportSTL() {
   link.download = `nametag_${text.replace(/\s+/g, '_').toLowerCase()}.stl`;
   link.click();
   URL.revokeObjectURL(url);
-
-  // Cleanup
-  tagGeo.dispose();
-  textGeo.dispose();
 
   // Button feedback animation
   downloadBtn.style.background = 'linear-gradient(135deg, #10b981 0%, #34d399 100%)';
