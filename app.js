@@ -44,11 +44,11 @@ const renderer = new THREE.WebGLRenderer({
   alpha: false,
 });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-renderer.setClearColor(0xe8e8e8, 1);
+renderer.setClearColor(0x0a0b0f, 1);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.4;
+renderer.toneMappingExposure = 1.2;
 
 // ---- Controls ----
 const controls = new OrbitControls(camera, canvas);
@@ -61,39 +61,39 @@ controls.minDistance = 20;
 controls.maxDistance = 200;
 
 // ---- Lighting ----
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+const ambientLight = new THREE.AmbientLight(0x404060, 0.6);
 scene.add(ambientLight);
 
-const keyLight = new THREE.DirectionalLight(0xffffff, 1.4);
+const keyLight = new THREE.DirectionalLight(0xffffff, 1.2);
 keyLight.position.set(30, 40, 50);
 keyLight.castShadow = true;
 keyLight.shadow.mapSize.set(1024, 1024);
 scene.add(keyLight);
 
-const fillLight = new THREE.DirectionalLight(0xffffff, 0.5);
+const fillLight = new THREE.DirectionalLight(0x8b90ff, 0.4);
 fillLight.position.set(-20, 10, -30);
 scene.add(fillLight);
 
-const rimLight = new THREE.DirectionalLight(0xffffff, 0.3);
+const rimLight = new THREE.DirectionalLight(0xa78bfa, 0.3);
 rimLight.position.set(0, -20, -40);
 scene.add(rimLight);
 
 // Environment
-const envLight = new THREE.HemisphereLight(0xffffff, 0xcccccc, 0.4);
+const envLight = new THREE.HemisphereLight(0x6c5ce7, 0x1a1d2b, 0.3);
 scene.add(envLight);
 
 // ---- Materials ----
 const tagMaterial = new THREE.MeshStandardMaterial({
-  color: 0x5a5f7c,
-  roughness: 0.4,
-  metalness: 0.5,
+  color: 0x3a3f5c,
+  roughness: 0.35,
+  metalness: 0.6,
   side: THREE.DoubleSide,
 });
 
 const textMaterial = new THREE.MeshStandardMaterial({
-  color: 0x4a3d8f,
-  roughness: 0.25,
-  metalness: 0.7,
+  color: 0xa78bfa,
+  roughness: 0.2,
+  metalness: 0.8,
 });
 
 const wireframeMaterial = new THREE.MeshBasicMaterial({
@@ -110,6 +110,61 @@ let isWireframe = false;
 let currentFontName = 'helvetiker';
 let currentFontWeight = 'regular';
 let fontsCache = {};
+let currentTheme = 'dark';
+
+// ---- Theme Toggle ----
+const themeToggleBtn = document.getElementById('themeToggleBtn');
+
+function applyTheme(theme) {
+  currentTheme = theme;
+  localStorage.setItem('nametag-theme', theme);
+
+  if (theme === 'light') {
+    document.documentElement.setAttribute('data-theme', 'light');
+    renderer.setClearColor(0xe8e8e8, 1);
+    renderer.toneMappingExposure = 1.4;
+    ambientLight.color.setHex(0xffffff);
+    ambientLight.intensity = 0.8;
+    keyLight.intensity = 1.4;
+    fillLight.color.setHex(0xffffff);
+    fillLight.intensity = 0.5;
+    rimLight.color.setHex(0xffffff);
+    rimLight.intensity = 0.3;
+    envLight.color.setHex(0xffffff);
+    envLight.groundColor.setHex(0xcccccc);
+    envLight.intensity = 0.4;
+    tagMaterial.color.setHex(0x5a5f7c);
+    tagMaterial.roughness = 0.4;
+    tagMaterial.metalness = 0.5;
+    textMaterial.color.setHex(0x4a3d8f);
+    textMaterial.roughness = 0.25;
+    textMaterial.metalness = 0.7;
+  } else {
+    document.documentElement.removeAttribute('data-theme');
+    renderer.setClearColor(0x0a0b0f, 1);
+    renderer.toneMappingExposure = 1.2;
+    ambientLight.color.setHex(0x404060);
+    ambientLight.intensity = 0.6;
+    keyLight.intensity = 1.2;
+    fillLight.color.setHex(0x8b90ff);
+    fillLight.intensity = 0.4;
+    rimLight.color.setHex(0xa78bfa);
+    rimLight.intensity = 0.3;
+    envLight.color.setHex(0x6c5ce7);
+    envLight.groundColor.setHex(0x1a1d2b);
+    envLight.intensity = 0.3;
+    tagMaterial.color.setHex(0x3a3f5c);
+    tagMaterial.roughness = 0.35;
+    tagMaterial.metalness = 0.6;
+    textMaterial.color.setHex(0xa78bfa);
+    textMaterial.roughness = 0.2;
+    textMaterial.metalness = 0.8;
+  }
+}
+
+themeToggleBtn.addEventListener('click', () => {
+  applyTheme(currentTheme === 'dark' ? 'light' : 'dark');
+});
 
 // ---- Font Loading ----
 const fontLoader = new FontLoader();
@@ -516,6 +571,10 @@ window.addEventListener('resize', handleResize);
 
 // ---- Initialize ----
 async function init() {
+  // Apply saved theme preference
+  const savedTheme = localStorage.getItem('nametag-theme') || 'dark';
+  applyTheme(savedTheme);
+
   handleResize();
   animate();
 
