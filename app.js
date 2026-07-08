@@ -84,20 +84,20 @@ scene.add(envLight);
 
 // ---- Materials ----
 const tagMaterial = new THREE.MeshStandardMaterial({
-  color: 0x3a3f5c,
+  color: 0x2a2a2a,
   roughness: 0.35,
   metalness: 0.6,
   side: THREE.DoubleSide,
 });
 
 const textMaterial = new THREE.MeshStandardMaterial({
-  color: 0xa78bfa,
+  color: 0xC5050C,
   roughness: 0.2,
   metalness: 0.8,
 });
 
 const wireframeMaterial = new THREE.MeshBasicMaterial({
-  color: 0x6c5ce7,
+  color: 0xC5050C,
   wireframe: true,
   transparent: true,
   opacity: 0.3,
@@ -133,30 +133,30 @@ function applyTheme(theme) {
     envLight.color.setHex(0xffffff);
     envLight.groundColor.setHex(0xcccccc);
     envLight.intensity = 0.4;
-    tagMaterial.color.setHex(0x5a5f7c);
+    tagMaterial.color.setHex(0xe1e5e7);
     tagMaterial.roughness = 0.4;
     tagMaterial.metalness = 0.5;
-    textMaterial.color.setHex(0x4a3d8f);
+    textMaterial.color.setHex(0xC5050C);
     textMaterial.roughness = 0.25;
     textMaterial.metalness = 0.7;
   } else {
     document.documentElement.removeAttribute('data-theme');
-    renderer.setClearColor(0x0a0b0f, 1);
+    renderer.setClearColor(0x121212, 1);
     renderer.toneMappingExposure = 1.2;
-    ambientLight.color.setHex(0x404060);
+    ambientLight.color.setHex(0x404040);
     ambientLight.intensity = 0.6;
     keyLight.intensity = 1.2;
-    fillLight.color.setHex(0x8b90ff);
+    fillLight.color.setHex(0x666666);
     fillLight.intensity = 0.4;
-    rimLight.color.setHex(0xa78bfa);
+    rimLight.color.setHex(0xC5050C);
     rimLight.intensity = 0.3;
-    envLight.color.setHex(0x6c5ce7);
-    envLight.groundColor.setHex(0x1a1d2b);
+    envLight.color.setHex(0xC5050C);
+    envLight.groundColor.setHex(0x2a2a2a);
     envLight.intensity = 0.3;
-    tagMaterial.color.setHex(0x3a3f5c);
+    tagMaterial.color.setHex(0x2a2a2a);
     tagMaterial.roughness = 0.35;
     tagMaterial.metalness = 0.6;
-    textMaterial.color.setHex(0xa78bfa);
+    textMaterial.color.setHex(0xC5050C);
     textMaterial.roughness = 0.2;
     textMaterial.metalness = 0.8;
   }
@@ -317,7 +317,7 @@ function buildNameTag(text) {
   const ringMesh = new THREE.Mesh(
     ringGeometry,
     isWireframe ? wireframeMaterial : new THREE.MeshStandardMaterial({
-      color: 0x6c5ce7,
+      color: 0xC5050C,
       roughness: 0.3,
       metalness: 0.7,
     })

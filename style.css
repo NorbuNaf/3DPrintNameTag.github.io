@@ -5,29 +5,29 @@
 
 /* ---- Dark Theme (Default) ---- */
 :root {
-  --bg-primary: #0a0b0f;
-  --bg-secondary: #12141c;
-  --bg-tertiary: #1a1d2b;
-  --bg-elevated: #1e2235;
-  --bg-hover: #252a3e;
+  --bg-primary: #121212;
+  --bg-secondary: #1a1a1a;
+  --bg-tertiary: #242424;
+  --bg-elevated: #2a2a2a;
+  --bg-hover: #333333;
 
   --surface-border: rgba(255, 255, 255, 0.08);
   --surface-border-hover: rgba(255, 255, 255, 0.15);
 
-  --text-primary: #e8eaf0;
-  --text-secondary: #8b90a5;
-  --text-tertiary: #5c6178;
+  --text-primary: #ffffff;
+  --text-secondary: #e1e5e7;
+  --text-tertiary: #999999;
 
-  --accent-primary: #6c5ce7;
-  --accent-secondary: #a78bfa;
-  --accent-glow: rgba(108, 92, 231, 0.25);
-  --accent-gradient: linear-gradient(135deg, #6c5ce7 0%, #a78bfa 100%);
+  --accent-primary: #C5050C;
+  --accent-secondary: #ff4d4d;
+  --accent-glow: rgba(197, 5, 12, 0.25);
+  --accent-gradient: linear-gradient(135deg, #C5050C 0%, #9B0000 100%);
 
   --success: #10b981;
   --success-bg: rgba(16, 185, 129, 0.08);
   --success-border: rgba(16, 185, 129, 0.15);
 
-  --viewport-bg: #0a0b0f;
+  --viewport-bg: #121212;
 
   --radius-sm: 8px;
   --radius-md: 12px;
@@ -52,21 +52,21 @@
 [data-theme="light"] {
   --bg-primary: #ffffff;
   --bg-secondary: #f5f5f7;
-  --bg-tertiary: #ecedf0;
-  --bg-elevated: #f0f0f2;
-  --bg-hover: #e4e4e8;
+  --bg-tertiary: #e1e5e7;
+  --bg-elevated: #ffffff;
+  --bg-hover: #d1d5d7;
 
   --surface-border: #bbbbbb;
   --surface-border-hover: #999999;
 
-  --text-primary: #1a1a1a;
+  --text-primary: #121212;
   --text-secondary: #3a3a3a;
   --text-tertiary: #555555;
 
-  --accent-primary: #4a2dc9;
-  --accent-secondary: #3b1fa8;
-  --accent-glow: rgba(74, 45, 201, 0.18);
-  --accent-gradient: linear-gradient(135deg, #4a2dc9 0%, #6340d9 100%);
+  --accent-primary: #C5050C;
+  --accent-secondary: #9B0000;
+  --accent-glow: rgba(197, 5, 12, 0.18);
+  --accent-gradient: linear-gradient(135deg, #C5050C 0%, #9B0000 100%);
 
   --success: #0a7a55;
   --success-bg: #e6f5ef;
@@ -290,6 +290,10 @@ body {
 
 .theme-toggle-btn:active {
   transform: rotate(0deg) scale(0.95);
+}
+
+.theme-toggle-btn svg {
+  pointer-events: none;
 }
 
 /* Dark mode: show sun (to switch to light), hide moon */
@@ -658,7 +662,8 @@ body {
 
 .download-btn:hover:not(:disabled) {
   transform: translateY(-1px);
-  box-shadow: 0 0 40px var(--accent-glow), var(--shadow-md);
+  box-shadow: var(--shadow-lg);
+  background: linear-gradient(135deg, #9B0000 0%, #C5050C 100%);
 }
 
 .download-btn:active:not(:disabled) {
@@ -708,14 +713,14 @@ body {
   align-items: flex-start;
   gap: 10px;
   padding: 14px;
-  background: rgba(108, 92, 231, 0.06);
-  border: 1px solid rgba(108, 92, 231, 0.1);
+  background: rgba(197, 5, 12, 0.06);
+  border: 1px solid rgba(197, 5, 12, 0.1);
   border-radius: var(--radius-sm);
 }
 
 [data-theme="light"] .tip-card {
-  background: #ededfa;
-  border: 2px solid #c5c0e8;
+  background: rgba(197, 5, 12, 0.08);
+  border: 2px solid rgba(197, 5, 12, 0.2);
 }
 
 .tip-icon {
@@ -838,7 +843,7 @@ body {
   pointer-events: none;
   z-index: 0;
   background-image:
-    radial-gradient(circle at 50% 50%, rgba(108, 92, 231, 0.03) 0%, transparent 70%);
+    radial-gradient(circle at 50% 50%, rgba(197, 5, 12, 0.05) 0%, transparent 70%);
 }
 
 [data-theme="light"] .viewport::before {
