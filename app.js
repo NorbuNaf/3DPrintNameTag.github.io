@@ -44,11 +44,11 @@ const renderer = new THREE.WebGLRenderer({
   alpha: false,
 });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-renderer.setClearColor(0x0a0b0f, 1);
+renderer.setClearColor(0xe8e8e8, 1);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.2;
+renderer.toneMappingExposure = 1.4;
 
 // ---- Controls ----
 const controls = new OrbitControls(camera, canvas);
@@ -61,39 +61,39 @@ controls.minDistance = 20;
 controls.maxDistance = 200;
 
 // ---- Lighting ----
-const ambientLight = new THREE.AmbientLight(0x404060, 0.6);
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
 scene.add(ambientLight);
 
-const keyLight = new THREE.DirectionalLight(0xffffff, 1.2);
+const keyLight = new THREE.DirectionalLight(0xffffff, 1.4);
 keyLight.position.set(30, 40, 50);
 keyLight.castShadow = true;
 keyLight.shadow.mapSize.set(1024, 1024);
 scene.add(keyLight);
 
-const fillLight = new THREE.DirectionalLight(0x8b90ff, 0.4);
+const fillLight = new THREE.DirectionalLight(0xffffff, 0.5);
 fillLight.position.set(-20, 10, -30);
 scene.add(fillLight);
 
-const rimLight = new THREE.DirectionalLight(0xa78bfa, 0.3);
+const rimLight = new THREE.DirectionalLight(0xffffff, 0.3);
 rimLight.position.set(0, -20, -40);
 scene.add(rimLight);
 
-// Subtle environment
-const envLight = new THREE.HemisphereLight(0x6c5ce7, 0x1a1d2b, 0.3);
+// Environment
+const envLight = new THREE.HemisphereLight(0xffffff, 0xcccccc, 0.4);
 scene.add(envLight);
 
 // ---- Materials ----
 const tagMaterial = new THREE.MeshStandardMaterial({
-  color: 0x3a3f5c,
-  roughness: 0.35,
-  metalness: 0.6,
+  color: 0x5a5f7c,
+  roughness: 0.4,
+  metalness: 0.5,
   side: THREE.DoubleSide,
 });
 
 const textMaterial = new THREE.MeshStandardMaterial({
-  color: 0xa78bfa,
-  roughness: 0.2,
-  metalness: 0.8,
+  color: 0x4a3d8f,
+  roughness: 0.25,
+  metalness: 0.7,
 });
 
 const wireframeMaterial = new THREE.MeshBasicMaterial({
@@ -268,6 +268,7 @@ function buildNameTag(text) {
     })
   );
   ringMesh.position.set(holeX, holeY, TAG_DEPTH / 2 + 0.5);
+  ringMesh.userData.isRing = true; // Tag so export can skip it
   tagGroup.add(ringMesh);
 
   // ---- Center the entire group ----
@@ -288,34 +289,35 @@ function exportSTL() {
   const text = nameInput.value.trim();
   if (!text) return;
 
-  // Build a temporary group with only the tag body and text (skip decorative ring)
-  // using the exact same geometry as the preview
-  const exportGroup = new THREE.Group();
+  // 1. Freeze the floating animation — save and reset position
+  const savedY = tagGroup.position.y;
+  tagGroup.position.y = 0;
 
-  tagGroup.children.forEach((child) => {
-    if (!child.isMesh) return;
+  // 2. Find and temporarily remove the decorative ring
+  //    (it's the child whose geometry is a TorusGeometry — tagged via userData)
+  const ringIndex = tagGroup.children.findIndex(c => c.userData.isRing);
+  let ringMesh = null;
+  if (ringIndex !== -1) {
+    ringMesh = tagGroup.children[ringIndex];
+    tagGroup.remove(ringMesh);
+  }
 
-    // Skip the decorative ring (TorusGeometry)
-    if (child.geometry.type === 'TorusGeometry') return;
+  // 3. Force update all world matrices so STLExporter gets correct transforms
+  tagGroup.updateMatrixWorld(true);
 
-    // Clone mesh so we can bake its position into the geometry for export
-    const clonedGeo = child.geometry.clone();
-    clonedGeo.applyMatrix4(child.matrixWorld);
-
-    const exportMesh = new THREE.Mesh(clonedGeo, new THREE.MeshBasicMaterial());
-    exportGroup.add(exportMesh);
-  });
-
-  // Export
+  // 4. Export the tagGroup directly — STLExporter traverses children
+  //    and applies their matrixWorld internally
   const exporter = new STLExporter();
-  const result = exporter.parse(exportGroup, { binary: true });
+  const result = exporter.parse(tagGroup, { binary: true });
 
-  // Cleanup cloned geometries
-  exportGroup.children.forEach((child) => {
-    if (child.geometry) child.geometry.dispose();
-  });
+  // 5. Verification: log bounding boxes of preview meshes vs exported data
+  verifyExport(tagGroup, result);
 
-  // Download
+  // 6. Restore the ring and animation
+  if (ringMesh) tagGroup.add(ringMesh);
+  tagGroup.position.y = savedY;
+
+  // 7. Download the file
   const blob = new Blob([result], { type: 'application/octet-stream' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
@@ -341,6 +343,69 @@ function exportSTL() {
       Download STL
     `;
   }, 2000);
+}
+
+// ---- Verify STL matches preview ----
+function verifyExport(group, stlData) {
+  // Compute bounding box of the preview meshes (what the user sees)
+  const previewBox = new THREE.Box3();
+  group.traverse((child) => {
+    if (child.isMesh) {
+      child.geometry.computeBoundingBox();
+      const worldBox = child.geometry.boundingBox.clone();
+      worldBox.applyMatrix4(child.matrixWorld);
+      previewBox.expandByPoint(worldBox.min);
+      previewBox.expandByPoint(worldBox.max);
+    }
+  });
+
+  // Parse the binary STL to count triangles and compute bounding box
+  const view = new DataView(stlData.buffer || stlData);
+  const numTriangles = view.getUint32(80, true); // after 80-byte header
+  const stlBox = new THREE.Box3();
+
+  for (let i = 0; i < numTriangles; i++) {
+    const offset = 84 + i * 50; // 80 header + 4 count + i * (12 normal + 36 verts + 2 attr)
+    // Skip normal (12 bytes), read 3 vertices (each 3 floats = 12 bytes)
+    for (let v = 0; v < 3; v++) {
+      const vOffset = offset + 12 + v * 12;
+      const x = view.getFloat32(vOffset, true);
+      const y = view.getFloat32(vOffset + 4, true);
+      const z = view.getFloat32(vOffset + 8, true);
+      stlBox.expandByPoint(new THREE.Vector3(x, y, z));
+    }
+  }
+
+  // Count preview triangles
+  let previewTriangles = 0;
+  group.traverse((child) => {
+    if (child.isMesh) {
+      const idx = child.geometry.index;
+      if (idx) {
+        previewTriangles += idx.count / 3;
+      } else {
+        const pos = child.geometry.getAttribute('position');
+        if (pos) previewTriangles += pos.count / 3;
+      }
+    }
+  });
+
+  const pSize = new THREE.Vector3();
+  const sSize = new THREE.Vector3();
+  previewBox.getSize(pSize);
+  stlBox.getSize(sSize);
+
+  console.log('=== STL EXPORT VERIFICATION ===');
+  console.log(`Preview triangles: ${previewTriangles}, STL triangles: ${numTriangles}`);
+  console.log(`Preview bounds: ${pSize.x.toFixed(2)} x ${pSize.y.toFixed(2)} x ${pSize.z.toFixed(2)}`);
+  console.log(`STL bounds:     ${sSize.x.toFixed(2)} x ${sSize.y.toFixed(2)} x ${sSize.z.toFixed(2)}`);
+
+  const dx = Math.abs(pSize.x - sSize.x);
+  const dy = Math.abs(pSize.y - sSize.y);
+  const dz = Math.abs(pSize.z - sSize.z);
+  const match = dx < 0.1 && dy < 0.1 && dz < 0.1 && previewTriangles === numTriangles;
+  console.log(`Match: ${match ? '✅ PASS' : '❌ FAIL'} (delta: ${dx.toFixed(3)}, ${dy.toFixed(3)}, ${dz.toFixed(3)})`);
+  console.log('===============================');
 }
 
 // ---- Camera Reset ----
