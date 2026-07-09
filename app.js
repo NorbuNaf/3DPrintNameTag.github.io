@@ -10,13 +10,13 @@ import { STLExporter } from 'three/addons/exporters/STLExporter.js';
 
 // ---- Constants (all in mm, 1 unit = 1 mm) ----
 const TAG_HEIGHT = 25;        // mm
-const TAG_DEPTH = 5;          // mm
-const HOLE_RADIUS = 1.5;      // mm (3mm diameter)
+const TAG_DEPTH = 2.5;        // mm (half of original 5mm)
+const HOLE_RADIUS = 4.5;      // mm (9mm diameter, triple original)
 const HOLE_SEGMENTS = 32;     // smoothness of hole cylinder
 const TAG_PADDING_X = 5;      // mm padding on each side of text
-const TAG_PADDING_HOLE = 5;   // mm extra padding on the left for the hole
+const TAG_PADDING_HOLE = 12;  // mm extra padding on the left for the larger hole
 const TEXT_SIZE = 12;          // mm font size
-const TEXT_DEPTH = 2;          // mm extrusion depth of text
+const TEXT_DEPTH = 1;          // mm extrusion depth of text (proportional to thinner tag)
 const TAG_CORNER_RADIUS = 3;  // mm corner radius for rounded rectangle
 
 // ---- DOM Elements ----
@@ -300,20 +300,20 @@ function buildNameTag(text) {
   const tw = bb.max.x - bb.min.x;
   const th = bb.max.y - bb.min.y;
 
-  // Center text on the tag (offset to the right to account for hole area)
-  const textOffsetX = -tw / 2 + TAG_PADDING_HOLE / 4;
+  // Center text on the tag body
+  const textOffsetX = -tw / 2;
   const textOffsetY = -th / 2;
 
   const textMesh = new THREE.Mesh(
     textGeometry,
     isWireframe ? wireframeMaterial : textMaterial
   );
-  textMesh.position.set(textOffsetX, textOffsetY, TAG_DEPTH + 0.5);
+  textMesh.position.set(textOffsetX, textOffsetY, TAG_DEPTH + 0.3);
   textMesh.castShadow = true;
   tagGroup.add(textMesh);
 
   // ---- Add ring around hole for visual appeal ----
-  const ringGeometry = new THREE.TorusGeometry(HOLE_RADIUS + 0.5, 0.4, 16, 32);
+  const ringGeometry = new THREE.TorusGeometry(HOLE_RADIUS + 0.8, 0.5, 16, 48);
   const ringMesh = new THREE.Mesh(
     ringGeometry,
     isWireframe ? wireframeMaterial : new THREE.MeshStandardMaterial({
@@ -322,7 +322,7 @@ function buildNameTag(text) {
       metalness: 0.7,
     })
   );
-  ringMesh.position.set(holeX, holeY, TAG_DEPTH / 2 + 0.5);
+  ringMesh.position.set(holeX, holeY, TAG_DEPTH / 2 + 0.3);
   ringMesh.userData.isRing = true; // Tag so export can skip it
   tagGroup.add(ringMesh);
 
