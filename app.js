@@ -170,19 +170,37 @@ themeToggleBtn.addEventListener('click', () => {
 const fontLoader = new FontLoader();
 const FONT_BASE_URL = 'https://cdn.jsdelivr.net/npm/three@0.173.0/examples/fonts/';
 
+// Custom fun fonts stored locally (only have 'regular' weight)
+const LOCAL_FONTS = {
+  'fredoka': 'fonts/fredoka_regular.typeface.json',
+  'bubblegum_sans': 'fonts/bubblegum_sans_regular.typeface.json',
+  'luckiest_guy': 'fonts/luckiest_guy_regular.typeface.json',
+  'bangers': 'fonts/bangers_regular.typeface.json',
+  'patrick_hand': 'fonts/patrick_hand_regular.typeface.json',
+};
+
+function isLocalFont(name) {
+  return name in LOCAL_FONTS;
+}
+
 function getFontUrl(name, weight) {
+  if (LOCAL_FONTS[name]) {
+    return LOCAL_FONTS[name]; // local fonts only have regular
+  }
   return `${FONT_BASE_URL}${name}_${weight}.typeface.json`;
 }
 
 function loadFont(name, weight) {
+  // Local fonts only have regular weight
+  const effectiveWeight = isLocalFont(name) ? 'regular' : weight;
   return new Promise((resolve, reject) => {
-    const key = `${name}_${weight}`;
+    const key = `${name}_${effectiveWeight}`;
     if (fontsCache[key]) {
       resolve(fontsCache[key]);
       return;
     }
     fontLoader.load(
-      getFontUrl(name, weight),
+      getFontUrl(name, effectiveWeight),
       (font) => {
         fontsCache[key] = font;
         resolve(font);
@@ -540,6 +558,14 @@ toggleWireframeBtn.addEventListener('click', toggleWireframe);
 
 fontSelect.addEventListener('change', async (e) => {
   currentFontName = e.target.value;
+  // Disable bold/regular buttons for local fonts (only have regular)
+  const local = isLocalFont(currentFontName);
+  btnBold.disabled = local;
+  if (local && currentFontWeight === 'bold') {
+    currentFontWeight = 'regular';
+    btnRegular.classList.add('active');
+    btnBold.classList.remove('active');
+  }
   try {
     currentFont = await loadFont(currentFontName, currentFontWeight);
     buildNameTag(nameInput.value.trim());
