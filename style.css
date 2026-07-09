@@ -616,6 +616,12 @@ body {
   box-shadow: 0 2px 12px var(--accent-glow);
 }
 
+.weight-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
 /* ---- Download Button ---- */
 .download-btn {
   width: 100%;
