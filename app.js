@@ -300,9 +300,14 @@ function buildNameTag(text) {
   const tw = bb.max.x - bb.min.x;
   const th = bb.max.y - bb.min.y;
 
-  // Center text on the tag body
-  const textOffsetX = -tw / 2;
-  const textOffsetY = -th / 2;
+  // Center text in the area to the right of the hole
+  const holeRightEdge = holeX + HOLE_RADIUS + 2; // 2mm gap from hole
+  const tagRightEdge = tagWidth / 2 - TAG_PADDING_X;
+  const textAreaCenterX = (holeRightEdge + tagRightEdge) / 2;
+  const textOffsetX = textAreaCenterX - bb.min.x - tw / 2;
+
+  // Center text vertically using bounding box center (accounts for baseline)
+  const textOffsetY = -(bb.min.y + bb.max.y) / 2;
 
   const textMesh = new THREE.Mesh(
     textGeometry,
