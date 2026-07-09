@@ -304,12 +304,13 @@ function buildNameTag(text) {
   tagGroup.add(tagMesh);
 
   // ---- Create 3D text ----
+  const isLocal = isLocalFont(currentFontName);
   const textGeometry = new TextGeometry(text, {
     font: currentFont,
     size: TEXT_SIZE,
     depth: TEXT_DEPTH,
-    curveSegments: 12,
-    bevelEnabled: true,
+    curveSegments: isLocal ? 6 : 12,
+    bevelEnabled: !isLocal, // Fun fonts have tight curves that spike when beveled
     bevelThickness: 0.3,
     bevelSize: 0.2,
     bevelOffset: 0,
