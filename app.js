@@ -255,8 +255,10 @@ function buildNameTag(text) {
   // Mirror hole padding on right side so text can be truly centered
   const tagWidth = textWidth + TAG_PADDING_X * 2 + TAG_PADDING_HOLE * 2;
 
-  // ---- Hole position (centered vertically, on the left) ----
-  const holeX = -tagWidth / 2 + TAG_PADDING_HOLE / 2 + HOLE_RADIUS + 1;
+  // ---- Hole position: centered between tag left edge and text left edge ----
+  // Text is centered at x=0, so text left edge = -textWidth/2
+  // Tag left edge = -tagWidth/2
+  const holeX = (-tagWidth / 2 + (-textWidth / 2)) / 2;
   const holeY = 0;
 
   // ---- Create tag body with hole ----
