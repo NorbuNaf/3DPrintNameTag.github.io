@@ -5,6 +5,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { FontLoader } from 'three/addons/loaders/FontLoader.js';
+import { TTFLoader } from 'three/addons/loaders/TTFLoader.js';
 import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
 import { STLExporter } from 'three/addons/exporters/STLExporter.js';
 
@@ -168,15 +169,16 @@ themeToggleBtn.addEventListener('click', () => {
 
 // ---- Font Loading ----
 const fontLoader = new FontLoader();
+const ttfLoader = new TTFLoader();
 const FONT_BASE_URL = 'https://cdn.jsdelivr.net/npm/three@0.173.0/examples/fonts/';
 
-// Custom fun fonts stored locally (only have 'regular' weight)
+// Custom fun fonts stored locally as TTFs (only have 'regular' weight)
 const LOCAL_FONTS = {
-  'fredoka': 'fonts/fredoka_regular.typeface.json',
-  'bubblegum_sans': 'fonts/bubblegum_sans_regular.typeface.json',
-  'luckiest_guy': 'fonts/luckiest_guy_regular.typeface.json',
-  'bangers': 'fonts/bangers_regular.typeface.json',
-  'patrick_hand': 'fonts/patrick_hand_regular.typeface.json',
+  'fredoka': 'fonts/fredoka.ttf',
+  'bubblegum_sans': 'fonts/bubblegum_sans.ttf',
+  'luckiest_guy': 'fonts/luckiest_guy.ttf',
+  'bangers': 'fonts/bangers.ttf',
+  'patrick_hand': 'fonts/patrick_hand.ttf',
 };
 
 function isLocalFont(name) {
@@ -192,22 +194,38 @@ function getFontUrl(name, weight) {
 
 function loadFont(name, weight) {
   // Local fonts only have regular weight
-  const effectiveWeight = isLocalFont(name) ? 'regular' : weight;
+  const local = isLocalFont(name);
+  const effectiveWeight = local ? 'regular' : weight;
   return new Promise((resolve, reject) => {
     const key = `${name}_${effectiveWeight}`;
     if (fontsCache[key]) {
       resolve(fontsCache[key]);
       return;
     }
-    fontLoader.load(
-      getFontUrl(name, effectiveWeight),
-      (font) => {
-        fontsCache[key] = font;
-        resolve(font);
-      },
-      undefined,
-      (err) => reject(err)
-    );
+
+    const url = getFontUrl(name, effectiveWeight);
+    if (local) {
+      ttfLoader.load(
+        url,
+        (json) => {
+          const font = fontLoader.parse(json);
+          fontsCache[key] = font;
+          resolve(font);
+        },
+        undefined,
+        (err) => reject(err)
+      );
+    } else {
+      fontLoader.load(
+        url,
+        (font) => {
+          fontsCache[key] = font;
+          resolve(font);
+        },
+        undefined,
+        (err) => reject(err)
+      );
+    }
   });
 }
 
