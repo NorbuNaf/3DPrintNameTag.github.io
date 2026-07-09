@@ -11,7 +11,7 @@ import { STLExporter } from 'three/addons/exporters/STLExporter.js';
 // ---- Constants (all in mm, 1 unit = 1 mm) ----
 const TAG_HEIGHT = 25;        // mm
 const TAG_DEPTH = 2.5;        // mm (half of original 5mm)
-const HOLE_RADIUS = 4.5;      // mm (9mm diameter, triple original)
+const HOLE_RADIUS = 3.5;      // mm (7mm diameter)
 const HOLE_SEGMENTS = 32;     // smoothness of hole cylinder
 const TAG_PADDING_X = 5;      // mm padding on each side of text
 const TAG_PADDING_HOLE = 12;  // mm extra padding on the left for the larger hole
@@ -252,7 +252,8 @@ function buildNameTag(text) {
   tempTextGeo.dispose();
 
   // ---- Calculate tag width ----
-  const tagWidth = textWidth + TAG_PADDING_X * 2 + TAG_PADDING_HOLE;
+  // Mirror hole padding on right side so text can be truly centered
+  const tagWidth = textWidth + TAG_PADDING_X * 2 + TAG_PADDING_HOLE * 2;
 
   // ---- Hole position (centered vertically, on the left) ----
   const holeX = -tagWidth / 2 + TAG_PADDING_HOLE / 2 + HOLE_RADIUS + 1;
@@ -300,11 +301,8 @@ function buildNameTag(text) {
   const tw = bb.max.x - bb.min.x;
   const th = bb.max.y - bb.min.y;
 
-  // Center text in the area to the right of the hole
-  const holeRightEdge = holeX + HOLE_RADIUS + 2; // 2mm gap from hole
-  const tagRightEdge = tagWidth / 2 - TAG_PADDING_X;
-  const textAreaCenterX = (holeRightEdge + tagRightEdge) / 2;
-  const textOffsetX = textAreaCenterX - bb.min.x - tw / 2;
+  // Center text horizontally on the full tag (symmetric padding makes this safe)
+  const textOffsetX = -bb.min.x - tw / 2;
 
   // Center text vertically using bounding box center (accounts for baseline)
   const textOffsetY = -(bb.min.y + bb.max.y) / 2;
